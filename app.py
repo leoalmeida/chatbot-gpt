@@ -4,6 +4,8 @@ from dotenv import load_dotenv
 import os
 from time import sleep
 from helpers import *
+from selectionar_persona import *
+from selecionar_documento import *
 
 load_dotenv()
 
@@ -13,18 +15,26 @@ modelo = "gpt-4"
 app = Flask(__name__)
 app.secret_key = 'alura'
 
-contexto = carrega("documentos/ecomart.txt")
-
 def bot(prompt_usuario):
     maximo_tentativas = 1
     repeticao = 0
+    persona = personas[selecionar_persona(prompt_usuario=prompt_usuario)]
+    print('Persona:', persona)
+    contexto = selecionar_contexto(prompt_usuario=prompt_usuario)
+    documento_selecionado = selecionar_documento(resposta_opeai=contexto)
     while True:
         try:
             prompt_sistema = f"""
             Você é um chatbot de atendimento a clientes de um e-commerce.
             Você não deve responder perguntas que não sejam dados do ecommerce informado!
+            Você deve gerar respostas utilizando o contexto abaixo.
+            Você deve adotar a persona abaixo.
+
             # Contexto
-            {contexto}
+            {documento_selecionado}
+
+            # Persona
+            {persona}
             """
             resposta = cliente.chat.completions.create(
                 messages=[
