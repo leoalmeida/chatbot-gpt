@@ -9,16 +9,17 @@ load_dotenv()
 cliente = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 modelo = "gpt-4"
 
-politicas_ecomart = carrega('documentos/políticas_ecomart.txt')
+politicas_ecomart = carrega('documentos/politicas_ecomart.txt')
 dados_ecomart = carrega('documentos/dados_ecomart.txt')
 produtos_ecomart = carrega('documentos/produtos_ecomart.txt')
+dados_completos = carrega('documentos/ecomart.txt')
 
-def selecionar_documento(resposta_opeai):
+def selecionar_documento(resposta_opeai="todos"):
     if "politicas" in resposta_opeai:
         return dados_ecomart + "\n" + politicas_ecomart
     elif "produtos" in resposta_opeai:  
         return dados_ecomart + "\n" + produtos_ecomart
-    else: return dados_ecomart
+    else: return dados_completos
 
 def selecionar_contexto(prompt_usuario):
     prompt_sistema = f"""
