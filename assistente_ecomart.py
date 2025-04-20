@@ -6,6 +6,7 @@ from selectionar_persona import *
 from selecionar_documento import *
 from tools_ecomart import *
 import json
+from vision_ecomart import analisar_imagem
 
 load_dotenv()
 
@@ -13,7 +14,8 @@ cliente = OpenAI(api_key=os.getenv("OPΕΝΑΙ_API_KEY"))
 
 STATUS_COMPLETED = "completed" 
 STATUS_REQUIRES_ACTION = "requires_action" 
-caminho_imagem_enviada = None
+
+UPLOAD_FOLDER='documentos'
 
 def apagar_assistente(assistant_id):
     cliente.beta.assistants.delete(assistant_id)
@@ -30,12 +32,9 @@ def apagar_arquivos(lista_ids_arquivos):
 
 def visualizar_historico(thread_id):
     historico = cliente.beta.threads.messages.list(thread_id=thread_id).data
-    for mensagem in reversed(historico):
-        print(f"role: {mensagem.role}\nConteúdo: {mensagem.content[0].text.value}")
     return list(historico)
 
-def enviar_mensagem(assistente_id, thread_id, prompt):
-    global caminho_imagem_enviada
+def enviar_mensagem(assistente_id, thread_id, prompt, caminho_imagem_enviada=None):
     maximo_tentativas = 1
     repeticao = 0
 
@@ -55,10 +54,17 @@ def enviar_mensagem(assistente_id, thread_id, prompt):
                 """
             )
 
+            resposta_vision=""
+            if caminho_imagem_enviada != None:
+                resposta_vision = analisar_imagem(caminho_imagem_enviada)
+                resposta_vision+= ". Na resposta final, apresente detalhes da descrição da imagem."
+                os.remove(caminho_imagem_enviada)
+                caminho_imagem_enviada = None
+            print("Resposta: "+resposta_vision)
             cliente.beta.threads.messages.create(
                 thread_id=thread_id, 
                 role = "user",
-                content = prompt
+                content = resposta_vision+prompt
             )
             
             run = cliente.beta.threads.runs.create(
